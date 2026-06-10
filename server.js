@@ -1,314 +1,37 @@
 const http = require('http');
 const https = require('https');
 
-const HTML = `<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="OH Kalkulator">
-<title>OH Kalkulator</title>
-<style>
-:root{--blau:#2e5c8a;--blau-d:#1c3d6b;--gruen:#2e8b57;--gruen-d:#256e45;--grau:#6b7280;--linie:#e5e7eb;--bg:#f2f2f7;--karte:#fff;--text:#1a2330;--gold:#c8973f;}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px;}
-.wrap{max-width:500px;margin:0 auto;}
-header{background:linear-gradient(160deg,var(--blau-d),var(--blau));color:#fff;padding:22px 18px 16px;padding-top:calc(22px + env(safe-area-inset-top));position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.15);}
-.logo{font-size:22px;font-weight:300;letter-spacing:6px;}
-.logo-sub{font-size:9px;letter-spacing:3px;opacity:.8;margin-top:2px;}
-.gear{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:18px;width:38px;height:38px;border-radius:19px;cursor:pointer;}
-.card{background:var(--karte);border-radius:16px;padding:18px 16px;margin:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
-h2{font-size:15px;font-weight:700;color:var(--blau-d);margin-bottom:8px;}
-.intro{font-size:13px;color:var(--grau);margin-bottom:12px;line-height:1.5;}
-label{display:block;font-size:13px;font-weight:600;color:var(--grau);margin:14px 0 6px;}
-textarea,input,select{width:100%;padding:13px 14px;border:1.5px solid var(--linie);border-radius:12px;font-size:16px;font-family:inherit;background:#fff;color:var(--text);outline:none;}
-textarea{min-height:110px;resize:vertical;}
-textarea:focus,input:focus,select:focus{border-color:var(--blau);}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
-.chip{padding:9px 16px;border-radius:20px;border:1.5px solid var(--linie);background:#fff;color:var(--grau);font-size:14px;cursor:pointer;font-family:inherit;}
-.chip.on{background:var(--blau);color:#fff;border-color:var(--blau);font-weight:600;}
-.btn-green{width:100%;padding:16px;background:var(--gruen);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-top:18px;font-family:inherit;}
-.btn-blue{width:100%;padding:14px;background:var(--blau);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;font-family:inherit;}
-.btn-outline{width:100%;padding:14px;background:#fff;color:var(--blau);border:1.5px solid var(--blau);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;font-family:inherit;}
-.price-box{background:linear-gradient(135deg,var(--blau),var(--blau-d));color:#fff;border-radius:16px;padding:22px 18px;margin:12px 14px;text-align:center;}
-.price-lbl{font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:1.5px;}
-.price-num{font-size:38px;font-weight:800;margin:4px 0;}
-.price-sub{font-size:13px;opacity:.9;margin-top:6px;border-top:1px solid rgba(255,255,255,.2);padding-top:8px;}
-.kt{width:100%;border-collapse:collapse;font-size:14px;}
-.kt td{padding:9px 0;border-bottom:1px solid var(--linie);vertical-align:top;}
-.kt td:last-child{text-align:right;font-weight:600;white-space:nowrap;padding-left:10px;}
-.kt .summe td{border-bottom:none;border-top:2px solid var(--blau);font-weight:800;color:var(--blau-d);padding-top:12px;font-size:16px;}
-.ml{list-style:none;}
-.ml li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--linie);font-size:14px;gap:10px;}
-.ml li:last-child{border-bottom:none;}
-.ml li span:last-child{color:var(--blau);font-weight:600;white-space:nowrap;}
-.at{background:#f9fafb;border:1.5px solid var(--linie);border-radius:12px;padding:14px;font-size:13px;white-space:pre-wrap;line-height:1.6;font-family:monospace;}
-.lern-card{background:#f0faf4;border:1.5px solid #bbf0cc;border-radius:16px;padding:16px;margin:12px 14px;}
-.fehler{background:#fef2f2;color:#b91c1c;padding:12px 14px;border-radius:12px;font-size:13px;margin:8px 0 0;}
-.denkweg{background:#eef3fa;border-radius:12px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.55;margin:0 14px 12px;}
-.warnung{font-size:12px;color:#92400e;background:#fffbeb;padding:10px 12px;border-radius:8px;margin-top:10px;}
-.badge{display:inline-block;font-size:11px;background:var(--gold);color:#fff;padding:3px 10px;border-radius:10px;font-weight:600;margin-bottom:10px;}
-.warn-box{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:12px;padding:12px 14px;margin:12px 14px;font-size:13px;color:#92400e;}
-.kopiert{color:var(--gruen);font-size:13px;font-weight:600;text-align:center;margin-top:8px;min-height:18px;}
-.spinner{width:48px;height:48px;border:3px solid var(--linie);border-top-color:var(--blau);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.lern-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--linie);font-size:13px;gap:10px;}
-.del{color:#b91c1c;cursor:pointer;font-size:11px;white-space:nowrap;}
-</style>
-</head>
-<body>
-<div class="wrap">
-<header>
-  <div><div class="logo">OH</div><div class="logo-sub">HAUSTECHNIK · KALKULATOR</div></div>
-  <button class="gear" onclick="toggleSettings()">⚙</button>
-</header>
-
-<div id="s-settings" style="display:none">
-  <div class="card">
-    <h2>⚙︎ API-Schlüssel</h2>
-    <p class="intro">Hol deinen Schlüssel auf <b>console.anthropic.com</b> → API Keys.</p>
-    <label>Anthropic API-Schlüssel</label>
-    <input type="password" id="apiIn" placeholder="sk-ant-...">
-    <button class="btn-green" style="margin-top:12px" onclick="saveKey()">✓ Speichern</button>
-    <div id="keyMsg" class="kopiert"></div>
-  </div>
-  <div class="card">
-    <h2>📚 Gelernte Korrekturen</h2>
-    <div id="lernListe"><p style="font-size:13px;color:#9ca3af">Noch keine.</p></div>
-  </div>
-  <div style="padding:0 14px"><button class="btn-outline" onclick="toggleSettings()">← Zurück</button></div>
-</div>
-
-<div id="s-form">
-  <div id="noKey" class="warn-box" style="display:none">⚙︎ Bitte zuerst oben rechts den API-Schlüssel eintragen.</div>
-  <div class="card">
-    <div class="badge">DEIN DIGITALER KALKULATOR</div>
-    <h2>Baustelle beschreiben</h2>
-    <p class="intro">Beschreib die Baustelle in eigenen Worten. Die KI rechnet Manntage, Material und Preis nach deiner Logik.</p>
-    <textarea id="beschr" placeholder="Beispiel: Wohnungssanierung 3 Zimmer, Unterputz, Altbau, neuer Hager Verteiler, Küche mit Herd und Spülmaschine, Demontage nötig, 15 km Fahrt"></textarea>
-    <label>Installationsart</label>
-    <div class="chips">
-      <button class="chip" onclick="setArt('Aufputz',this)">Aufputz</button>
-      <button class="chip on" onclick="setArt('Unterputz',this)">Unterputz</button>
-      <button class="chip" onclick="setArt('Gemischt',this)">Gemischt</button>
-    </div>
-    <div class="row" style="margin-top:14px">
-      <div><label style="margin-top:0">m² (opt.)</label><input type="number" id="qm" placeholder="z.B. 85" inputmode="numeric"></div>
-      <div><label style="margin-top:0">Fahrt km (opt.)</label><input type="number" id="km" placeholder="z.B. 15" inputmode="numeric"></div>
-    </div>
-    <label>Wer stellt das Material?</label>
-    <select id="matQ">
-      <option value="ich">Ich (im Preis enthalten)</option>
-      <option value="bauseits">Bauseits (Kunde stellt Material)</option>
-    </select>
-    <div id="fehler" class="fehler" style="display:none"></div>
-    <button class="btn-green" onclick="kalk()">⚡ Baustelle kalkulieren</button>
-  </div>
-</div>
-
-<div id="s-load" style="display:none;text-align:center;padding:80px 20px">
-  <div class="spinner"></div>
-  <p style="color:var(--grau);font-size:15px">Kalkuliert deine Baustelle …</p>
-  <p style="color:#9ca3af;font-size:13px;margin-top:8px">Arbeitszeit · Material · Preis</p>
-</div>
-
-<div id="s-result" style="display:none">
-  <div class="price-box">
-    <div class="price-lbl">Zielpreis (netto, 0% USt)</div>
-    <div class="price-num" id="r-ziel">–</div>
-    <div class="price-sub" id="r-sub"></div>
-  </div>
-  <div class="denkweg" id="r-denkweg"></div>
-  <div class="card">
-    <h2>🧮 Kalkulation</h2>
-    <table class="kt"><tbody id="r-kt"></tbody></table>
-    <p style="font-size:12px;color:#9ca3af;margin-top:8px">68€×2=136€/Std · 8,5 Std/Tag · Material +10%</p>
-  </div>
-  <div class="card" id="r-matcard">
-    <h2>📦 Materialliste</h2>
-    <ul class="ml" id="r-mat"></ul>
-    <div class="warnung">⚠️ Mengen nach Faustregeln geschätzt. Vor Bestellung prüfen.</div>
-  </div>
-  <div class="card">
-    <h2>📄 Angebotstext für Lexware</h2>
-    <div class="at" id="r-at"></div>
-    <button class="btn-blue" onclick="kopier()">📋 Text kopieren</button>
-    <div class="kopiert" id="kopMsg"></div>
-  </div>
-  <div class="lern-card">
-    <h2 style="color:#166534">🎯 Stimmt die Kalkulation?</h2>
-    <p class="intro">Korrigiere hier – die App lernt für das nächste Mal.</p>
-    <textarea id="korr" placeholder="z.B. 'Zu wenig Tage, Altbau braucht 5 Tage Rohmontage'" style="min-height:80px"></textarea>
-    <button class="btn-green" style="margin-top:10px" onclick="lernNeu()">✓ Speichern & neu rechnen</button>
-    <div class="kopiert" id="lernMsg"></div>
-  </div>
-  <div style="padding:0 14px"><button class="btn-outline" onclick="neuBau()">↺ Neue Baustelle</button></div>
-</div>
-</div>
-
-<script>
-const W=\`KALKULATIONS-LOGIK OH Haustechnik (Kleinunternehmer, 0% USt):
-ARBEITSZEIT in MANNTAGEN:
-- Stundensatz Sanierung: 68€×2=136€/Std, Arbeitstag=8,5h
-- Wohnungssanierung 3Z UP Altbau: Rohmontage 4 Tage(2 Pers)+Fertigmontage 1,5T=8-11 Manntage
-- Rohmontage: Demontage(mehrere Std!),anzeichnen,fräsen,schlitzen,stemmen,Leitungen,Verteiler
-- Fertigmontage: Schalter/Steckdosen/Lampen,Verteiler anklemmen,messen,prüfen+Puffer
-- Aufputz(Zuleitung liegt): ca.2,5Std/Raum(4Steckdosen+Schalter+Lampe)
-- Endpreis 3-Zimmer-Sanierung: 8.000-11.000€ inkl.Material
-MATERIAL:
-- NYM-J 3×1,5: ca.1,5m/m²+10%Verschnitt
-- Separate Verbraucher+10m Reserve: Herd→NYM5×2,5|Spülm/Waschm/Trockner→NYM3×2,5|DLE→NYM4×6
-- Dosen: 1 Steckdose=1Dose,Doppel=2Dosen
-- Verteiler: Hager VU48NC,2×FI40A,12×LSB16,1×LSB163pol,ÜSS Typ2
-- Material 3-Zimmer-Sanierung: ca.1.000-1.500€
-- Anfahrt>10km: 100-200€\`;
-
-let art='Unterputz',letzterT='',letzterF={};
-const gl=id=>document.getElementById(id);
-const eur=n=>(n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
-const getKey=()=>localStorage.getItem('oh_key')||'';
-const getLern=()=>{try{return JSON.parse(localStorage.getItem('oh_lern')||'[]');}catch(e){return[];}};
-const setLernS=a=>localStorage.setItem('oh_lern',JSON.stringify(a));
-
-function zeige(s){
-  ['settings','form','load','result'].forEach(id=>gl('s-'+id).style.display='none');
-  gl('s-'+s).style.display='block';
-  if(s==='form'){gl('noKey').style.display=getKey()?'none':'block';}
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function toggleSettings(){
-  if(gl('s-settings').style.display==='block'){zeige('form');}
-  else{gl('apiIn').value=getKey();renderLL();zeige('settings');}
-}
-
-function saveKey(){
-  localStorage.setItem('oh_key',gl('apiIn').value.trim());
-  gl('keyMsg').textContent='✓ Gespeichert!';
-  setTimeout(()=>gl('keyMsg').textContent='',2000);
-}
-
-function renderLL(){
-  const l=getLern(),el=gl('lernListe');
-  el.innerHTML=l.length?l.map((t,i)=>\`<div class="lern-item"><span>• \${t}</span><span class="del" onclick="delL(\${i})">löschen</span></div>\`).join(''):'<p style="font-size:13px;color:#9ca3af">Noch keine.</p>';
-}
-
-function delL(i){const l=getLern();l.splice(i,1);setLernS(l);renderLL();}
-function setArt(a,b){art=a;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));b.classList.add('on');}
-
-async function kalk(extra=''){
-  const key=getKey(),beschr=gl('beschr').value.trim(),fe=gl('fehler');
-  fe.style.display='none';
-  if(!key){fe.textContent='Kein API-Schlüssel. Tippe oben auf ⚙︎.';fe.style.display='block';return;}
-  if(beschr.length<8){fe.textContent='Bitte Baustelle beschreiben.';fe.style.display='block';return;}
-  const qm=gl('qm').value||'unbekannt',km=gl('km').value||'0',mat=gl('matQ').value;
-  letzterF={beschr,art,qm,km,mat};
-  const lern=getLern();
-  const lT=lern.length?'\\nGELERNTE KORREKTUREN:\\n- '+lern.join('\\n- '):'';
-  const eT=extra?\`\\nZUSATZ: \${extra}\`:'';
-  const prompt=\`\${W}\${lT}\${eT}\\n\\nBAUSTELLE: "\${beschr}"\\nArt:\${art} m²:\${qm} Fahrt:\${km}km Material:\${mat==='ich'?'durch OH':'bauseits'}\\n\\nKalkuliere vollständig in Manntagen mit Puffer. Antworte NUR JSON:\\n{"manntage":<n>,"arbeitsstunden":<n>,"arbeitskosten":<n>,"fahrtkosten":<n>,"material_netto":<n>,"material_mit_aufschlag":<n>,"zielpreis":<n>,"minimalpreis":<n>,"denkweg":"<2 Sätze>","material_liste":[{"pos":"x","menge":"x"}],"leistungen":["x"]}\`;
-  zeige('load');
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})
-    });
-    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'Status '+r.status);}
-    const d=await r.json();
-    let t=d.content.map(i=>i.type==='text'?i.text:'').join('').trim().replace(/\`\`\`json|\`\`\`/g,'').trim();
-    const s=t.indexOf('{'),en=t.lastIndexOf('}');
-    if(s>=0&&en>=0)t=t.slice(s,en+1);
-    zeigR(JSON.parse(t),mat);
-  }catch(e){
-    zeige('form');
-    let m='Fehler: ';
-    if((e.message||'').includes('401'))m+='API-Schlüssel ungültig. Unter ⚙︎ prüfen.';
-    else if((e.message||'').includes('credit'))m+='Guthaben aufladen: console.anthropic.com';
-    else m+=e.message||'Bitte nochmal versuchen.';
-    fe.textContent=m;fe.style.display='block';
-  }
-}
-
-function zeigR(k,mat){
-  gl('r-ziel').textContent=eur(k.zielpreis);
-  gl('r-sub').innerHTML=\`\${k.manntage} Manntage · \${k.arbeitsstunden} Std<br>Verhandelbar bis: <b>\${eur(k.minimalpreis)}</b>\`;
-  gl('r-denkweg').textContent=k.denkweg?'💭 '+k.denkweg:'';
-  let rows=\`<tr><td>Arbeit (\${k.arbeitsstunden} Std × 136€)</td><td>\${eur(k.arbeitskosten)}</td></tr>\`;
-  if(k.fahrtkosten>0)rows+=\`<tr><td>Anfahrt</td><td>\${eur(k.fahrtkosten)}</td></tr>\`;
-  if(k.material_mit_aufschlag>0)rows+=\`<tr><td>Material (+10%)</td><td>\${eur(k.material_mit_aufschlag)}</td></tr>\`;
-  rows+=\`<tr class="summe"><td>Zielpreis</td><td>\${eur(k.zielpreis)}</td></tr>\`;
-  gl('r-kt').innerHTML=rows;
-  if(mat==='bauseits'||!k.material_liste?.length){gl('r-matcard').style.display='none';}
-  else{gl('r-matcard').style.display='block';gl('r-mat').innerHTML=k.material_liste.map(m=>\`<li><span>\${m.pos}</span><span>\${m.menge||''}</span></li>\`).join('');}
-  let t='Arbeitsleistung\\nLeistungsumfang:\\n'+k.leistungen.map(l=>'• '+l).join('\\n');
-  t+=mat==='bauseits'?'\\n\\nHinweis:\\nMaterial wird bauseits gestellt.':'\\n\\nHinweis:\\nMaterial ist im Angebotspreis enthalten.';
-  letzterT=t;gl('r-at').textContent=t;
-  gl('korr').value='';gl('lernMsg').textContent='';gl('kopMsg').textContent='';
-  zeige('result');
-}
-
-function kopier(){
-  navigator.clipboard.writeText(letzterT).then(()=>{gl('kopMsg').textContent='✓ Kopiert!';setTimeout(()=>gl('kopMsg').textContent='',2500);}).catch(()=>{
-    const r=document.createRange();r.selectNode(gl('r-at'));window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand('copy');window.getSelection().removeAllRanges();gl('kopMsg').textContent='✓ Kopiert!';
-  });
-}
-
-function lernNeu(){
-  const k=gl('korr').value.trim();if(k.length<4)return;
-  const l=getLern();l.push(k);setLernS(l);
-  gl('lernMsg').textContent='✓ Gelernt! Rechne neu …';
-  setTimeout(()=>{gl('beschr').value=letzterF.beschr||'';gl('qm').value=letzterF.qm||'';gl('km').value=letzterF.km||'';gl('matQ').value=letzterF.mat||'ich';kalk(k);},600);
-}
-
-function neuBau(){gl('beschr').value='';gl('qm').value='';gl('km').value='';zeige('form');}
-zeige('form');
-</script>
-</body>
-</html>
-`;
-
 const server = http.createServer((req, res) => {
   if (req.method === 'POST' && req.url === '/api/kalk') {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    req.on('data', d => body += d);
     req.on('end', () => {
-      const apiKey = req.headers['x-api-key'];
-      const options = {
+      const key = req.headers['x-api-key'];
+      const pr = https.request({
         hostname: 'api.anthropic.com',
         path: '/v1/messages',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01'
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'Content-Length': Buffer.byteLength(body)
         }
-      };
-      const proxyReq = https.request(options, proxyRes => {
-        let data = '';
-        proxyRes.on('data', chunk => data += chunk);
-        proxyRes.on('end', () => {
-          res.writeHead(200, {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'});
-          res.end(data);
+      }, r => {
+        let d = '';
+        r.on('data', c => d += c);
+        r.on('end', () => {
+          res.writeHead(200, {'Content-Type':'application/json','Access-Control-Allow-Origin':'*'});
+          res.end(d);
         });
       });
-      proxyReq.on('error', e => {
-        res.writeHead(500);
-        res.end(JSON.stringify({error: e.message}));
-      });
-      proxyReq.write(body);
-      proxyReq.end();
+      pr.write(body);
+      pr.end();
     });
-  } else if (req.method === 'OPTIONS') {
-    res.writeHead(200, {'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*'});
-    res.end();
   } else {
-    res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-    res.end(HTML);
+    res.writeHead(200, {'Content-Type':'text/plain'});
+    res.end('OK');
   }
 });
 
-server.listen(process.env.PORT || 3000, '0.0.0.0', () => console.log('Server läuft'));
+server.listen(process.env.PORT || 3000, '0.0.0.0');
