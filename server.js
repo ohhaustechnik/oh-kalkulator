@@ -311,4 +311,4 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(process.env.PORT || 3000, () => console.log('OK'));
+server.listen(process.env.PORT || 3000, '0.0.0.0', () => console.log('Server läuft'));
