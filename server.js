@@ -1,15 +1,20 @@
 const express = require('express');
-const cors = require('cors');
 const fetch = require('node-fetch');
 
 const app = express();
-app.use(cors());
 app.use(express.json());
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', '*');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
 
 app.post('/api/kalk', async (req, res) => {
   const apiKey = req.headers['x-api-key'];
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -18,7 +23,7 @@ app.post('/api/kalk', async (req, res) => {
       },
       body: JSON.stringify(req.body)
     });
-    const data = await response.json();
+    const data = await r.json();
     res.json(data);
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -29,12 +34,4 @@ app.get('*', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('OK'));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('Server läuft auf Port ' + PORT));
+app.listen(process.env.PORT || 3000);
